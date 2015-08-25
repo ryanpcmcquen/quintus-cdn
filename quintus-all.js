@@ -2754,24 +2754,28 @@ Quintus["2D"] = function(Q) {
         if(!p.skipCollide && p.vy > 0) { p.vy = 0; }
         col.impact = impactY;
         entity.trigger("bump.bottom",col);
+        entity.trigger("bump",col);
       }
       if(col.normalY > 0.3) {
         if(!p.skipCollide && p.vy < 0) { p.vy = 0; }
         col.impact = impactY;
 
         entity.trigger("bump.top",col);
+        entity.trigger("bump",col);
       }
 
       if(col.normalX < -0.3) {
         if(!p.skipCollide && p.vx > 0) { p.vx = 0;  }
         col.impact = impactX;
         entity.trigger("bump.right",col);
+        entity.trigger("bump",col);
       }
       if(col.normalX > 0.3) {
         if(!p.skipCollide && p.vx < 0) { p.vx = 0; }
         col.impact = impactX;
 
         entity.trigger("bump.left",col);
+        entity.trigger("bump",col);
       }
     },
 
@@ -2876,7 +2880,6 @@ Quintus.Anim = function(Q) {
         if(p.animationChanged) {
           p.animationChanged = false;
         } else {
-          p.animationTime += dt;
           if(p.animationTime > rate) {
             stepped = Math.floor(p.animationTime / rate);
             p.animationTime -= stepped * rate;
@@ -2971,8 +2974,9 @@ Quintus.Anim = function(Q) {
       }
 
       startX = curX;
-      endX = Q.width / scale + p.repeatW;
-      endY = Q.height / scale + p.repeatH;
+      endX = Q.width / Math.abs(scale) / Math.abs(p.scale || 1) + p.repeatW;
+      endY = Q.height / Math.abs(scale) / Math.abs(p.scale || 1) + p.repeatH;
+
       while(curY < endY) {
         curX = startX;
         while(curX < endX) {
@@ -3898,9 +3902,25 @@ Quintus.Input = function(Q) {
         }
       };
 
+      /**
+       * Fired when the user scrolls the mouse wheel up or down
+       * Anyone subscribing to the "mouseWheel" event will receive an event with one numeric parameter
+       * indicating the scroll direction. -1 for down, 1 for up.
+       * @private
+       */
+      Q._mouseWheel = function(e) {
+        // http://www.sitepoint.com/html5-javascript-mouse-wheel/
+        // cross-browser wheel delta
+        e = window.event || e; // old IE support
+        var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+        Q.input.trigger('mouseWheel', delta);
+      };
+
       Q.el.addEventListener('mousemove',Q._mouseMove,true);
       Q.el.addEventListener('touchstart',Q._mouseMove,true);
       Q.el.addEventListener('touchmove',Q._mouseMove,true);
+      Q.el.addEventListener('mousewheel',Q._mouseWheel,true);
+      Q.el.addEventListener('DOMMouseScroll',Q._mouseWheel,true);
     },
 
     /**
@@ -3912,6 +3932,8 @@ Quintus.Input = function(Q) {
     disableMouseControls: function() {
       if(Q._mouseMove) {
         Q.el.removeEventListener("mousemove",Q._mouseMove, true);
+        Q.el.removeEventListener("mousewheel",Q._mouseWheel, true);
+        Q.el.removeEventListener("DOMMouseScroll",Q._mouseWheel, true);
         Q.el.style.cursor = 'inherit';
         Q._mouseMove = null;
       }
@@ -5520,7 +5542,7 @@ Quintus.Sprites = function(Q) {
       }
 
       this.cols = this.cols ||
-                  Math.floor(this.w / (this.tileW + this.spacingX));
+                  Math.floor((this.w + this.spacingX) / (this.tileW + this.spacingX));
 
       this.frames = this.cols * (Math.floor(this.h/(this.tileH + this.spacingY)));
     },
@@ -6588,7 +6610,7 @@ Quintus.Touch = function(Q) {
 
           if(!stage) { continue; }
 
-          touch.identifier = touch.identifier || 0;
+          var touchIdentifier = touch.identifier || 0;
           var pos = this.normalizeTouch(touch,stage);
 
           stage.regrid(pos,true);
@@ -6601,19 +6623,19 @@ Quintus.Touch = function(Q) {
           }
 
           if(obj && !this.touchedObjects[obj]) {
-            this.activeTouches[touch.identifier] = {
+            this.activeTouches[touchIdentifier] = {
               x: pos.p.px,
               y: pos.p.py,
               origX: obj.p.x,
               origY: obj.p.y,
               sx: pos.p.ox,
               sy: pos.p.oy,
-              identifier: touch.identifier,
+              identifier: touchIdentifier,
               obj: obj,
               stage: stage
             };
             this.touchedObjects[obj.p.id] = true;
-            obj.trigger('touch', this.activeTouches[touch.identifier]);
+            obj.trigger('touch', this.activeTouches[touchIdentifier]);
             break;
           }
 
@@ -6627,10 +6649,10 @@ Quintus.Touch = function(Q) {
       var touches = e.changedTouches || [ e ];
 
       for(var i=0;i<touches.length;i++) {
-        var touch = touches[i];
-        touch.identifier = touch.identifier || 0;
+        var touch = touches[i],
+            touchIdentifier = touch.identifier || 0;
 
-        var active = this.activeTouches[touch.identifier],
+        var active = this.activeTouches[touchIdentifier],
             stage = active && active.stage;
 
         if(active) {
@@ -6650,16 +6672,15 @@ Quintus.Touch = function(Q) {
       var touches = e.changedTouches || [ e ];
 
       for(var i=0;i<touches.length;i++) {
-        var touch = touches[i];
+        var touch = touches[i],
+            touchIdentifier = touch.identifier || 0;
 
-        touch.identifier = touch.identifier || 0;
-
-        var active = this.activeTouches[touch.identifier];
+        var active = this.activeTouches[touchIdentifier];
 
         if(active) {
           active.obj.trigger('touchEnd', active);
           delete this.touchedObjects[active.obj.p.id];
-          this.activeTouches[touch.identifier] = null;
+          this.activeTouches[touchIdentifier] = null;
         }
       }
       e.preventDefault();
