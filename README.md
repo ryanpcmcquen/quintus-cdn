@@ -4,13 +4,13 @@ quintus-cdn
 Compiled CDN versions of Quintus libraries.
 https://github.com/cykod/Quintus
 
-c97bbd93aec86dca1569aea762bcf98da428402e:
+f772bdbc74df2b4983ab883fb23d73770361e639:
 
 Minified:
 
-```<script src='https://cdn.rawgit.com/ryanpcmcquen/quintus-cdn/ebac29895aaa6ed5ea6811c755d707fa4bbffa4f/quintus-all.min.js'></script>```
+https://cdn.rawgit.com/ryanpcmcquen/quintus-cdn/f772bdbc74df2b4983ab883fb23d73770361e639/quintus-all.min.js
 
 Full-bodied:
 
-```<script src='https://cdn.rawgit.com/ryanpcmcquen/quintus-cdn/ebac29895aaa6ed5ea6811c755d707fa4bbffa4f/quintus-all.js'></script>```
+https://cdn.rawgit.com/ryanpcmcquen/quintus-cdn/f772bdbc74df2b4983ab883fb23d73770361e639/quintus-all.js
 
